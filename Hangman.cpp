@@ -1,18 +1,19 @@
 // g++ -std=c++11 Hangman.cpp Game.cpp -o hangman
 #include "Game.h"
 #include <iostream>
+#include <list>
 #include <fstream>
 #include <set>
 #include <unordered_map>
 #include <algorithm>
 using namespace std;
 
-unordered_map<int, vector<string>> lenDic;
+unordered_map<int, list<string>> lenDic;
 
 
 // iterates through all possibilities and guessed characters to find most common character in 
 // possible words that is not already guessed.
-char findNextGuess(set<char> guessed, vector<string> poss)
+char findNextGuess(set<char> guessed, list<string> poss)
 {
 	unsigned int totalCounts[256] = {0};
 
@@ -41,6 +42,19 @@ char findNextGuess(set<char> guessed, vector<string> poss)
 	return nextGuess;
 }
 
+// we guessed the wrong character; iterate through possibilities, remove impossible elements
+void trimPoss(list<string>* poss, char wrong_char)
+{
+	for(list<string>::iterator it = poss->begin(); it != poss->end(); it++)
+		if ((*it).find('k') != string::npos)
+		    it = poss->erase(it);
+}
+
+void trimPoss(string curr, list<string>* poss)
+{
+
+}
+
 void readDict()
 {
 	string line;
@@ -48,7 +62,7 @@ void readDict()
 	if (myfile.is_open())
 	{
 		while (getline (myfile,line))
-			if (lenDic.emplace(make_pair<int, vector<string>>(int(line.length()), vector<string>{string(line)})).second == false)
+			if (lenDic.emplace(make_pair<int, list<string>>(int(line.length()), list<string>{string(line)})).second == false)
 				lenDic[line.length()].push_back(line);
 		myfile.close();
 	}
@@ -59,17 +73,31 @@ void readDict()
 int main()
 {
 	// readDict();
-	Game* g = new Game("back");
 
-	cout << *g;
-	g->guess_letter('a');
-	cout << *g; 
+	// Game* g = new Game("back");
+	// cout << *g;
+	// g->guess_letter('a');
+	// cout << *g; 
+	// delete g;
 
-
-	cout << endl << "obj: " << *g;
-
-	delete g;
 	// findNextGuess(guessed, possible);
+
+	list<string> l;
+	l.push_back("back");
+	l.push_back("asdf");
+	l.push_back("qwer");
+	l.push_back("sack");
+	l.push_back("lack");
+	l.push_back("mat");
+	l.push_back("daft");
+	l.push_back("mace");
+	l.push_back("kept");
+	trimPoss(&l, 'k');
+	
+	for (auto const& item : l)
+	{
+		cout << item << " ";
+	}
 
 	return 0;
 }

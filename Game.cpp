@@ -48,15 +48,13 @@ Result Game::guess_letter(char c)
 	int index = 0;
 	string word = this->get_word();
 	for (auto it = word.begin(); it != word.end(); ++it, ++index) 
-	{
-		string new_letter(1, c);
 		if (*it == c)
 		{
-			// cout << "debug: " << *it << c << endl;
+			string new_letter(1, c);
 			found = true;
 			this->_curr.replace(index, new_letter.length(), new_letter);
 		}
-	}
+	
 
 	if (!found)
 	{
