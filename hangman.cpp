@@ -62,12 +62,12 @@ char findNextGuess(vector<char> guessed, vector<string> poss)
 		// letters should only count once per word
 		// eg: in "shah", the h should only count once.
 		set<char> string_set;
-		for (auto& c : word)
+		for (auto c : word)
 			string_set.insert(c);
-		
-		for (auto& c : string_set)
+
+		for (auto c : string_set)
 			if (find(guessed.begin(), guessed.end(), c) == guessed.end())
-				totalCounts[(unsigned char)c] = 1;
+				totalCounts[(unsigned char)c]++;
 	}
 
 	int max = 0;
@@ -95,10 +95,6 @@ void readDict()
 	}
 	else 
 		cout << "Unable to open file"; 
-	
-	// for (auto& item: lenDic)
-	// 	cout << item.first << ": " << item.second[0] << endl;
-	// cout << lenDic.size();
 }
 
 int main()
@@ -106,8 +102,5 @@ int main()
 	// readDict();
 
 
-	vector<char> guessed = {'a', 'c'};
-	vector<string> poss = {"bat", "cat", "chh"};
-
-	cout << findNextGuess(guessed, poss);
+	cout << "guess: " << findNextGuess(guessed, possible) << endl;
 }
