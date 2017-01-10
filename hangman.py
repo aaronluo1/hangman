@@ -6,48 +6,48 @@ import re, argparse
 # global dictionary of words (key: length, value: list of words)
 lenDict = defaultdict(list)
 
-#class Game(Enum):
+#class State(Enum):
 #    PLAYING = auto()
 #    WON = auto()
 #    LOSS = auto()
-#    
+#
 #class Result(Enum):
 #    GUESS_EXISTS = auto()
 #    GUESS_DNE = auto()
 #    ERROR = auto()
 
-class Game(Enum):
+class State(Enum):
     PLAYING = 1
     WON = 2
     LOSS = 3
-    
+
 class Result(Enum):
     GUESS_EXISTS = 4
     GUESS_DNE = 5
     ERROR = 6
 
 # represents the status of the game
-class state:
+class Game:
     def __init__(self, inWord):
         self._word = list(inWord)
         self._curr = ['.'] * len(inWord)     # some list that represents a regex object
         self._fail = []                      # some list of failed letters
         self._guessed = []                   # some list of guessed letters
-        self._state = Game.PLAYING
+        self._state = State.PLAYING
 
     # guess a certain letter.
     # updates fail or curr accordingly
-    def guess(self, guess):
+    def guess_letter(self, guess):
         if guess in self._guessed:
             print "YOU HAVE ALREADY GUESSED THIS LETTER"
             return Result.ERROR
-        if self._state is not Game.PLAYING:
+        if self._state is not State.PLAYING:
             print "GAME OVER"
             return Result.ERROR
 
         self._guessed.append(guess)
         found = False
-        
+
         for counter, letter in enumerate(self._word):
             if letter is guess:
                 self._curr[counter] = guess
@@ -56,20 +56,20 @@ class state:
         if found is False:
             self._fail.append(guess)
             if len(self._fail) >= 7:
-                self._state = Game.LOSS
+                self._state = State.LOSS
                 print "YOU HAVE FAILED IN GUESSING THE WORD:", "".join(self._word)
             return Result.GUESS_DNE
         else:
             if '.' not in self._curr:
-                self._state = Game.WON
+                self._state = State.WON
                 #print "YOU HAVE SUCCEEDED IN GUESSING THE WORD:", "".join(self._word)
             return Result.GUESS_EXISTS
-            
+
     def __str__(self):
         return "Word: {0}; Curr: {1}; Fail: {2}".format("".join(self._word), "".join(self._curr), self._fail)
 
 
-# read text input dictionary, get lenDict. 
+# read text input dictionary, get lenDict.
 # note: same working folder
 def readDictionary():
     text_file = open('words_50000.txt', 'r')
@@ -96,29 +96,29 @@ def trimPoss(curr, poss, missed=None):
         return [l for l in poss for m in (searchRegex(l),) if m]
     else:
         return [word for word in poss if missed not in word]
-        
+
 # number of possibilities is less than the number guesses,
 # guess words, we will win.
 # note: using this function actually makes the overall running time slower.
 def guessWords(game, poss):
     for word in poss:
         if word == "".join(game._word):
-            game._state = Game.WON
+            game._state = State.WON
             return True
         else:
             game._guessed.append(word)
             if len(game._guessed) >= 7:
-                game._state = Game.LOSS
+                game._state = State.LOSS
                 return False
 
 # Hangman solver
 def solve(word):
-    game = state(word)
+    game = game(word)
     poss = lenDict[len(game._word)]
-    
-    while game._state is Game.PLAYING: 
+
+    while game._state is State.PLAYING:
         guess = findNextGuess(game._guessed, poss)
-        res = game.guess(guess)
+        res = game.guess_letter(guess)
 
         if res is Result.GUESS_EXISTS:
             poss = trimPoss(game._curr, poss)
@@ -132,7 +132,7 @@ def solve(word):
         else:
             break
     return game._state
-    
+
 # prints statistics as outlined by requirements
 def printStats(time, correct, total):
     print "Number of words tested:", total_words
@@ -144,7 +144,7 @@ def printStats(time, correct, total):
 if __name__ == "__main__":
     # saves to global variable so we only read the file once
     readDictionary()
-       
+
     # parser for optional string input that solves a specific word
     # if argument does not exist, run through whole dictionary.
     parser = argparse.ArgumentParser(description='Hangman Solver.')
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.w is not None:
-        solve(args.w)       
+        solve(args.w)
     else:
         total_words = 0
         correct_words = 0
@@ -160,7 +160,7 @@ if __name__ == "__main__":
         for k, v in lenDict.iteritems():
             for i in v:
                 total_words += 1
-                if solve(i) is Game.WON:
+                if solve(i) is State.WON:
                     correct_words += 1
         end = timer()
         printStats(end - start, correct_words, total_words)
