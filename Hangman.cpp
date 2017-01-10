@@ -60,23 +60,14 @@ int main()
 {
 	// readDict();
 	Game* g = new Game("back");
-	cout << g->guess_letter('b') << endl;
-	cout << g->guess_letter('z') << endl;
-	cout << g->guess_letter('p') << endl;
-	cout << g->guess_letter('a') << endl;
-	cout << g->guess_letter('c') << endl;
-	cout << g->guess_letter('k') << endl;
-	cout << g->guess_letter('u') << endl;
-	cout << g->guess_letter('y') << endl;
-	cout << g->guess_letter('o') << endl;
-	cout << g->guess_letter('h') << endl;
-	cout << g->guess_letter('j') << endl;
+
+	cout << *g;
+	g->guess_letter('a');
+	cout << *g; 
 
 
+	cout << endl << "obj: " << *g;
 
-
-	for (auto s : g->_guessed)
-		cout << s ;
 	delete g;
 	// findNextGuess(guessed, possible);
 

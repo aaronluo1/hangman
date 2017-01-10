@@ -2,16 +2,19 @@
 #include <algorithm>
 using namespace std;
 
-// ostream& operator<< (ostream& out, const Game& obj)
-// {
-//     out << "Word: " << obj._word;
-//     out << "Curr: " << obj._curr;
-//     out << "Failed: ";
-//     for (auto const& letter: obj._failed)
-//     out << letter;
-//     out << "State: " << obj._state;    
-//     return out;
-// }
+ostream& operator<< (ostream& out, const Game& obj)
+{
+    out << "Word: " << obj._word << endl;
+    out << "Curr: " << obj._curr << endl;
+    out << "Guessed: ";
+    for (auto const& letter: obj._guessed)
+    	out << letter;
+    out << endl << "Failed: ";
+	for (auto const& letter: obj._failed)
+    	out << letter;
+    out << endl << "State: " << obj._state  << endl;    
+    return out;
+}
 
 
 Game::Game(string word) :
@@ -51,7 +54,7 @@ Result Game::guess_letter(char c)
 		{
 			// cout << "debug: " << *it << c << endl;
 			found = true;
-			this->_curr.replace(index, index++, new_letter);
+			this->_curr.replace(index, new_letter.length(), new_letter);
 		}
 	}
 
@@ -63,7 +66,6 @@ Result Game::guess_letter(char c)
 			cout << "YOU HAVE FAILED IN GUESSING THE WORD: " << this->get_word() << endl;
 			this->_state = LOST;
 		}
-cout << "guess does not exist" << endl;
 		return GUESS_DNE;
 	}	
 	else
@@ -71,7 +73,6 @@ cout << "guess does not exist" << endl;
 		size_t found = this->_curr.find('.');
 		if (found == string::npos)
 			this->_state = WON;
-cout << "guess exists" << endl;
 		return GUESS_EXISTS;
 	}
 }

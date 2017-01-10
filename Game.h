@@ -20,7 +20,7 @@ class Game {
 		Game(std::string s);
 		std::string get_word();
 		Result guess_letter(char c);
-		// friend ostream& operator<< (ostream& out, const Game& obj); 
+		friend std::ostream& operator<< (std::ostream& out, const Game& obj); 
 };
 
 #endif
