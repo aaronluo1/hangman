@@ -46,14 +46,11 @@ char findNextGuess(set<char> const guessed, list<string> const poss)
 void trimPoss(list<string>* poss, char const wrong_char)
 {
 	
-	boost::regex expr{string(1, wrong_char)};
-	for(list<string>::iterator it = poss->begin(); it != poss->end(); ++it)
-		if (boost::regex_match(*it, expr))
-		{
-		    it = poss->erase(it);
-		    --it;
-		}
-
+ 	for(list<string>::iterator it = poss->begin(); it != poss->end(); )
+ 		if ((*it).find(wrong_char) != string::npos)
+  		    it = poss->erase(it);
+  		else
+  			++it;
 }
 
 void trimPoss(list<string>* poss, string curr)
@@ -62,12 +59,12 @@ void trimPoss(list<string>* poss, string curr)
 	curr.insert(curr.length(),"$"); 
 	
 	boost::regex expr{curr};
-	for(list<string>::iterator it = poss->begin(); it != poss->end(); ++it)
+	for(list<string>::iterator it = poss->begin(); it != poss->end(); )
 		if (!boost::regex_match(*it, expr))
-		{
-		    it = poss->erase(it);
-		    --it;
-		}
+			it = poss->erase(it);
+		else
+			++it;
+
 }
 
 unordered_map<int, list<string>> readDict()
@@ -115,6 +112,9 @@ State play_game(string const word, unordered_map<int, list<string>> lenDic)
 			trimPoss(&poss, guess);
 		else
 			break;
+		// cout << guess << endl << g << endl;
+		// for (auto w : poss)
+		// 	cout << w << " ";
 	}
 	return g._state;
 }
@@ -124,6 +124,7 @@ int main(int argc, char *argv[])
 {
 	unordered_map<int, list<string>> lenDic = readDict();
 	if (argc == 2)
+		// play_game(argv[1]);
 		play_game(argv[1], lenDic);
 	if (argc == 1)
 	{
@@ -138,12 +139,12 @@ int main(int argc, char *argv[])
 					wrong ++;
 		}
 		auto t2 = Clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t2).count();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
 		int correct = total-wrong;
 		cout << "Number of words tested: " << total << endl
 			<< "Number of words guessed correctly: " << correct << endl
 			<< "Correct Guesses (\%): " << double(correct/total) << endl
-			<< "Time to run: " << duration << endl;
+			<< "Time to run: " << duration << " ms" << endl;
 	}
 
 	
