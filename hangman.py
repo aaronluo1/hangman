@@ -66,7 +66,7 @@ class Game:
             return Result.GUESS_EXISTS
 
     def __str__(self):
-        return "Word: {0}; Curr: {1}; Fail: {2}".format("".join(self._word), "".join(self._curr), self._fail)
+        return "Word: {0}; Curr: {1}; Fail: {2}; Guessed: {3}".format("".join(self._word), "".join(self._curr), self._fail, self._guessed)
 
 
 # read text input dictionary, get lenDict.
@@ -113,7 +113,7 @@ def guessWords(game, poss):
 
 # Hangman solver
 def solve(word):
-    game = game(word)
+    game = Game(word)
     poss = lenDict[len(game._word)]
 
     while game._state is State.PLAYING:

@@ -9,12 +9,10 @@
 #include <algorithm>
 using namespace std;
 
-unordered_map<int, list<string>> lenDic;
-
 
 // iterates through all possibilities and guessed characters to find most common character in 
 // possible words that is not already guessed.
-char findNextGuess(set<char> guessed, list<string> poss)
+char findNextGuess(set<char> const guessed, list<string> const poss)
 {
 	unsigned int totalCounts[256] = {0};
 
@@ -44,7 +42,7 @@ char findNextGuess(set<char> guessed, list<string> poss)
 }
 
 // we guessed the wrong character; iterate through possibilities, remove impossible elements
-void trimPoss(list<string>* poss, char wrong_char)
+void trimPoss(list<string>* poss, char const wrong_char)
 {
 	for(list<string>::iterator it = poss->begin(); it != poss->end(); it++)
 		if ((*it).find('k') != string::npos)
@@ -56,10 +54,6 @@ void trimPoss(list<string>* poss, string curr)
 	curr.insert(0,"^");                
 	curr.insert(curr.length(),"$"); 
 	
-	// boost::regex expr{curr};
-	// boost::smatch what;
-	// for (auto const& word : poss)
-	// 	if (boost::regex_search(word, what, expr))
 	boost::regex expr{curr};
 	for(list<string>::iterator it = poss->begin(); it != poss->end(); ++it)
 		if (!boost::regex_match(*it, expr))
@@ -67,11 +61,11 @@ void trimPoss(list<string>* poss, string curr)
 		    it = poss->erase(it);
 		    --it;
 		}
-
 }
 
-void readDict()
+unordered_map<int, list<string>> readDict()
 {
+	unordered_map<int, list<string>> lenDic;
 	string line;
 	ifstream myfile ("words_50000.txt");
 	if (myfile.is_open())
@@ -83,35 +77,47 @@ void readDict()
 	}
 	else 
 		cout << "Unable to open file"; 
+
+	return lenDic;
 }
+
+State play_game(string const word, unordered_map<int, list<string>> lenDic)
+{
+	Game g (word);
+	list<string> poss = lenDic[word.length()];
+
+	while (g._state == PLAYING)
+	{
+		char guess = findNextGuess(g._guessed, poss);
+		Result r = g.guess_letter(guess);
+
+		if (r == GUESS_EXISTS)
+		{
+			trimPoss(&poss, g._curr);
+		}
+		else if (r == GUESS_DNE)
+		{
+			trimPoss(&poss, guess);
+		}
+		else
+		{
+			break;
+		}
+		cout << "guessed: " << guess << " poss: " ;
+		for (auto item : poss)
+			cout << item << " ";
+		cout << endl;
+	}
+	cout << g;
+	return g._state;
+}
+
 
 int main(int argc, char *argv[])
 {
-	// readDict();
+	unordered_map<int, list<string>> lenDic = readDict();
 
-	// Game* g = new Game("back");
-	// cout << *g;
-	// g->guess_letter('a');
-	// cout << *g; 
-	// delete g;
-
-	// findNextGuess(guessed, possible);
-
-	list<string> l;
-	l.push_back("back");
-	l.push_back("asdf");
-	l.push_back("qwer");
-	l.push_back("sack");
-	l.push_back("stack");
-	l.push_back("mat");
-	l.push_back("daft");
-	l.push_back("mace");
-	l.push_back("kept");
-	trimPoss(&l, ".ack");
-
-	for (auto const& item : l)
-		cout << item << " ";
-	
+	play_game("abduct", lenDic);
 
 
 	return 0;

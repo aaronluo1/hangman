@@ -19,8 +19,8 @@ class Game {
 
 		Game(std::string s);
 		std::string get_word();
-		Result guess_letter(char c);
-		friend std::ostream& operator<< (std::ostream& out, const Game& obj); 
+		Result guess_letter(char const c);
+		friend std::ostream& operator<< (std::ostream& out, Game const& obj); 
 };
 
 #endif

@@ -2,7 +2,7 @@
 #include <algorithm>
 using namespace std;
 
-ostream& operator<< (ostream& out, const Game& obj)
+ostream& operator<< (ostream& out, Game const& obj)
 {
     out << "Word: " << obj._word << endl;
     out << "Curr: " << obj._curr << endl;
@@ -29,7 +29,7 @@ string Game::get_word()
 	return this->_word;
 }
 
-Result Game::guess_letter(char c) 
+Result Game::guess_letter(char const c) 
 {
 	if (this->_guessed.find(c) != this->_guessed.end())
 	{
