@@ -1,5 +1,6 @@
-// g++ -std=c++11 Hangman.cpp Game.cpp -o hangman
+// g++ -std=c++11 Hangman.cpp Game.cpp -o hangman -lboost_regex  
 #include "Game.h"
+#include <boost/regex.hpp>
 #include <iostream>
 #include <list>
 #include <fstream>
@@ -50,8 +51,22 @@ void trimPoss(list<string>* poss, char wrong_char)
 		    it = poss->erase(it);
 }
 
-void trimPoss(string curr, list<string>* poss)
+void trimPoss(list<string>* poss, string curr)
 {
+	curr.insert(0,"^");                
+	curr.insert(curr.length(),"$"); 
+	
+	// boost::regex expr{curr};
+	// boost::smatch what;
+	// for (auto const& word : poss)
+	// 	if (boost::regex_search(word, what, expr))
+	boost::regex expr{curr};
+	for(list<string>::iterator it = poss->begin(); it != poss->end(); ++it)
+		if (!boost::regex_match(*it, expr))
+		{
+		    it = poss->erase(it);
+		    --it;
+		}
 
 }
 
@@ -70,7 +85,7 @@ void readDict()
 		cout << "Unable to open file"; 
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	// readDict();
 
@@ -87,17 +102,17 @@ int main()
 	l.push_back("asdf");
 	l.push_back("qwer");
 	l.push_back("sack");
-	l.push_back("lack");
+	l.push_back("stack");
 	l.push_back("mat");
 	l.push_back("daft");
 	l.push_back("mace");
 	l.push_back("kept");
-	trimPoss(&l, 'k');
-	
+	trimPoss(&l, ".ack");
+
 	for (auto const& item : l)
-	{
 		cout << item << " ";
-	}
+	
+
 
 	return 0;
 }
