@@ -3,7 +3,7 @@
 #include <boost/regex.hpp>
 #include <chrono>
 #include <iostream>
-#include <list>
+#include <vector>
 #include <fstream>
 #include <set>
 #include <unordered_map>
@@ -13,7 +13,7 @@ using namespace std;
 
 // iterates through all possibilities and guessed characters to find most common character in 
 // possible words that is not already guessed.
-char findNextGuess(set<char> const guessed, list<string> const poss)
+char findNextGuess(set<char> const guessed, vector<string> const poss)
 {
 	unsigned int totalCounts[256] = {0};
 
@@ -43,23 +43,22 @@ char findNextGuess(set<char> const guessed, list<string> const poss)
 }
 
 // we guessed the wrong character; iterate through possibilities, remove impossible elements
-void trimPoss(list<string>* poss, char const wrong_char)
+void trimPoss(vector<string>* poss, char const wrong_char)
 {
-	
- 	for(list<string>::iterator it = poss->begin(); it != poss->end(); )
+ 	for(vector<string>::iterator it = poss->begin(); it != poss->end(); )
  		if ((*it).find(wrong_char) != string::npos)
   		    it = poss->erase(it);
   		else
   			++it;
 }
 
-void trimPoss(list<string>* poss, string curr)
+void trimPoss(vector<string>* poss, string curr)
 {
 	curr.insert(0,"^");                
 	curr.insert(curr.length(),"$"); 
 	
 	boost::regex expr{curr};
-	for(list<string>::iterator it = poss->begin(); it != poss->end(); )
+	for(vector<string>::iterator it = poss->begin(); it != poss->end(); )
 		if (!boost::regex_match(*it, expr))
 			it = poss->erase(it);
 		else
@@ -67,31 +66,49 @@ void trimPoss(list<string>* poss, string curr)
 
 }
 
-unordered_map<int, list<string>> readDict()
+int readDict(unordered_map<int, vector<string>>* lenDic)
 {
-	unordered_map<int, list<string>> lenDic;
+	int counter = 0;
 	string line;
 	ifstream myfile ("words_50000.txt");
 	if (myfile.is_open())
 	{
 		while (getline (myfile,line))
-			if (lenDic.emplace(make_pair<int, list<string>>(int(line.length()), list<string>{string(line)})).second == false)
-				lenDic[line.length()].push_back(line);
+			if (lenDic->emplace(make_pair<int, vector<string>>(int(line.length()), vector<string>{string(line)})).second == false)
+			{
+				(*lenDic)[line.length()].push_back(line);
+				counter++;
+			}
 		myfile.close();
 	}
 	else 
 		cout << "Unable to open file"; 
 
-	return lenDic;
+	return counter;
 }
 
-State play_game(string const word, unordered_map<int, list<string>> lenDic)
-// State play_game(string const word)
+void readDict(vector<string>* l, int len)
+{
+	string line;
+	ifstream myfile ("words_50000.txt");
+	if (myfile.is_open())
+	{
+		while (getline (myfile,line))
+			if (line.length() == len)
+				l->push_back(line);
+		myfile.close();
+	}
+	else 
+		cout << "Unable to open file"; 
+}
+
+State play_game(string const word)
 {
 	Game g (word);
-	list<string> poss = lenDic[word.length()];
+	vector<string> poss;
+	readDict(&poss, word.length());
 	// k4 c6 a7 b1 s1 p1 d1 m2 l2 t2
-	// list<string> poss;
+	// vector<string> poss;
 	// poss.push_back("back");
 	// poss.push_back("sack");
 	// poss.push_back("pack");
@@ -119,25 +136,73 @@ State play_game(string const word, unordered_map<int, list<string>> lenDic)
 	return g._state;
 }
 
+State play_game(string const word, unordered_map<int, vector<string>> lenDic)
+{
+	Game g (word);
+	vector<string> poss = lenDic[word.length()];
+
+	while (g._state == PLAYING)
+	{
+		char guess = findNextGuess(g._guessed, poss);
+		Result r = g.guess_letter(guess);
+		if (r == GUESS_EXISTS)
+			trimPoss(&poss, g._curr);
+		else if (r == GUESS_DNE)
+			trimPoss(&poss, guess);
+		else
+			break;
+	}
+	return g._state;
+}
+
 
 int main(int argc, char *argv[])
 {
-	unordered_map<int, list<string>> lenDic = readDict();
+	/*
+	unordered_map tradeoff: with more memory space, creating this unordered_map is faster.
+	However, since I am using a small machine, it is faster to read the file for every new word.
+	*/
+	/*
+	set vs list vs vector tradeoff: use sets if characters in dictionary are repeating (there is one repeating
+	word, I'm unsure if this was on purpose). I originally used lists since we don't need random access, but for
+	OpenMP we need vectors since for loops can not use iterators for OpenMP.
+	*/
+	unordered_map<int, vector<string>> lenDic;
+	int total = readDict(&lenDic);
 	if (argc == 2)
-		// play_game(argv[1]);
-		play_game(argv[1], lenDic);
+		play_game(argv[1]);
 	if (argc == 1)
 	{
 		int wrong = 0; int total = 0;
 		typedef chrono::high_resolution_clock Clock;
 		auto t1 = Clock::now();
+
+		#pragma omp parallel for collapse(2)
 		for (int i = 0; i < lenDic.size(); i++)
+			for(int j = 0; j < lenDic[i].size(); ++j)
+				if (play_game(lenDic[i][j], lenDic) == LOST)
+					#pragma omp atomic
+					++wrong;
+
+
+
+		/* code from unordered_map tradeoff; runs faster on my machine, but probably not on yours
+		string line;
+		ifstream myfile ("words_50000.txt");
+		if (myfile.is_open())
 		{
-			total += lenDic[i].size();
-			for (auto const w : lenDic[i])
-				if (play_game(w, lenDic) == LOST)
-					wrong ++;
+			while (getline (myfile,line))
+			{
+				++total;
+				if (play_game(w) == LOST)
+					++wrong;
+			}
+			myfile.close();
 		}
+		else 
+			cout << "Unable to open file"; 
+		*/
+
 		auto t2 = Clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
 		int correct = total-wrong;
